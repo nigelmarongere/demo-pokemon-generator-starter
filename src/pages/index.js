@@ -10,8 +10,31 @@ import Button from '@/components/Button';
 import Card from '@/components/Card';
 
 import styles from '@/styles/Home.module.scss'
+import { useState } from 'react';
 
 export default function Home() {
+
+  const [attributes, setAttributes] = useState(); 
+  const [image, setImage] = useState();
+
+  async function onGenerate(e) {
+    e.preventDefault();
+
+    setAttributes(undefined);
+    setImage(undefined);
+
+    const results = await fetch('/api/pokemon/create').then(r => r.json());
+    setAttributes(results.attributes);
+
+    const { image } = await fetch('/api/pokemon/image', {
+      method: 'POST',
+      body: JSON.stringify({
+        description: results.attributes.appearance
+      })
+    }).then(r => r.json());
+    setImage(image);
+  };
+
   return (
     <Layout>
       <Head>
@@ -23,9 +46,11 @@ export default function Home() {
       <Section>
         <Container className={styles.cardContainer}>
           <div className={styles.card}>
-            <Card />
+            <Card attributes={attributes} image={image}/>
             <h2>Backstory</h2>
-            <p>Backstory</p>
+            {attributes?.backstory && (
+              <p>{attributes.backstory}</p>
+            )}
           </div>
           <Form className={styles.form}>
             <h2>Create a new Pokémon!</h2>
@@ -34,7 +59,7 @@ export default function Home() {
               <FormInput name="type" />
             </FormRow> */}
             <FormRow>
-              <Button>Generate</Button>
+              <Button onClick={onGenerate}>Generate</Button>
             </FormRow>
           </Form>
         </Container>
